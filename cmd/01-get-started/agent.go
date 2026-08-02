@@ -12,7 +12,6 @@ import (
 	"google.golang.org/adk/v2/cmd/launcher/full"
 	"google.golang.org/adk/v2/model/gemini"
 	"google.golang.org/adk/v2/tool"
-	"google.golang.org/adk/v2/tool/geminitool"
 )
 
 func main() {
@@ -23,7 +22,8 @@ func main() {
 		Name:        "researcher",
 		Model:       model,
 		Instruction: "You help users research topics thoroughly.",
-		Tools:       []tool.Tool{geminitool.GoogleSearch{}},
+		//Tools:       []tool.Tool{geminitool.GoogleSearch{}},
+		Tools: []tool.Tool{},
 	})
 	config := &launcher.Config{
 		AgentLoader: agent.NewSingleLoader(a),
