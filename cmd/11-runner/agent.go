@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/siuyin/dflt"
 	"google.golang.org/adk/v2/agent"
@@ -33,6 +34,11 @@ func main() {
 		Name:        "researcher",
 		Model:       model,
 		Instruction: "You help users research topics thoroughly.",
+		GenerateContentConfig: &genai.GenerateContentConfig{
+			ThinkingConfig: &genai.ThinkingConfig{
+				IncludeThoughts: true,
+				ThinkingLevel:   genai.ThinkingLevelMedium},
+		},
 	})
 	if err != nil {
 		log.Fatal("could not create agent: ", err)
@@ -60,24 +66,36 @@ func main() {
 
 	userMsg := &genai.Content{
 		Role:  genai.RoleUser,
-		Parts: []*genai.Part{genai.NewPartFromText("Explain AI in 1 sentence.")},
+		Parts: []*genai.Part{genai.NewPartFromText("Explain the math constant e in one sentence.")},
 	}
 
-	events := myRunner.Run(ctx, userID, sessionID, userMsg, agent.RunConfig{})
+	events := myRunner.Run(ctx, userID, sessionID, userMsg, agent.RunConfig{StreamingMode: agent.StreamingModeSSE})
 
-	fmt.Print("Agent Response: ")
 	for event, err := range events {
 		if err != nil {
 			log.Printf("\nError during stream: %v", err)
 			break
 		}
 
-		if event.Content != nil {
-			for _, part := range event.Content.Parts {
-				if part.Text != "" {
-					fmt.Print(part.Text)
-				}
+		if event.Content == nil {
+			continue
+		}
+
+		for _, part := range event.Content.Parts {
+			if part.Text == "" {
+				continue
 			}
+			if part.Thought {
+				fmt.Print("T: ")
+			}
+			if !part.Thought && event.LLMResponse.Partial {
+				fmt.Print("P: ")
+			}
+			if !part.Thought && !event.LLMResponse.Partial {
+				fmt.Print("\n\nFinal Response: ")
+			}
+			fmt.Print(part.Text)
+			os.Stdout.Sync()
 		}
 	}
 	fmt.Println()
