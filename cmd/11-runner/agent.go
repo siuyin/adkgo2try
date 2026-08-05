@@ -45,13 +45,11 @@ func main() {
 	}
 
 	sessionSvc := session.InMemoryService()
-
-	_, err = sessionSvc.Create(ctx, &session.CreateRequest{
+	if _, err := sessionSvc.Create(ctx, &session.CreateRequest{
 		AppName:   appName,
 		UserID:    userID,
 		SessionID: sessionID,
-	})
-	if err != nil {
+	}); err != nil {
 		log.Fatalf("Failed to create session: %v", err)
 	}
 
